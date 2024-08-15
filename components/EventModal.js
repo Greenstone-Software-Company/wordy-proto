@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { XMarkIcon, LinkIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { db, auth } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 const EventModal = ({ isOpen, onClose, onEventCreate, selectedDate }) => {
   const [title, setTitle] = useState('');
@@ -8,16 +10,30 @@ const EventModal = ({ isOpen, onClose, onEventCreate, selectedDate }) => {
   const [endTime, setEndTime] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+
     const newEvent = {
       title,
       start: new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${startTime}`),
       end: new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${endTime}`),
       meetingLink,
+      userId: user.uid,
     };
-    onEventCreate(newEvent);
-    onClose();
+
+    try {
+      const docRef = await addDoc(collection(db, 'events'), newEvent);
+      console.log('Event added with ID: ', docRef.id);
+      onEventCreate({ ...newEvent, id: docRef.id });
+      onClose();
+    } catch (error) {
+      console.error('Error adding event: ', error);
+    }
   };
 
   if (!isOpen) return null;

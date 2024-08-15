@@ -1,5 +1,5 @@
 import React from 'react';
-import { XIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const SettingsModal = ({ isOpen, onClose, settings, setSettings }) => {
   if (!isOpen) return null;
@@ -14,7 +14,7 @@ const SettingsModal = ({ isOpen, onClose, settings, setSettings }) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-wordy-text">Dashboard Settings</h2>
           <button onClick={onClose} className="text-wordy-text hover:text-wordy-accent">
-            <XIcon className="h-6 w-6" />
+            <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
         <div className="space-y-4">

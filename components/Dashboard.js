@@ -7,13 +7,15 @@ import RecentMeetings from './widgets/RecentMeetings';
 import SettingsModal from './SettingsModal';
 import EventModal from './EventModal';
 import { getGoogleAuthUrl, getGoogleEvents } from '../lib/googleCalendar';
+import { db, auth } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = ({ handleGoogleCalendarSync }) => {
   const [events, setEvents] = useState([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState({
@@ -36,22 +38,26 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      if (code) {
-        const googleEvents = await getGoogleEvents(code);
-        setEvents(googleEvents.map(event => ({
-          title: event.summary,
-          start: event.start.dateTime || event.start.date,
-          end: event.end.dateTime || event.end.date,
-          meetingLink: event.hangoutLink || '',
-        })));
-        toast.success('Events synced successfully!');
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('No user logged in');
+        return;
       }
+
+      const eventsRef = collection(db, 'events');
+      const q = query(eventsRef, where('userId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      const fetchedEvents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        start: doc.data().start.toDate(),
+        end: doc.data().end.toDate(),
+      }));
+      setEvents(fetchedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
       setError('Failed to load events. Please try again.');
-      toast.error('Failed to sync events. Please try again.');
+      toast.error('Failed to load events. Please try again.');
     } finally {
       setIsLoading(false);
     }

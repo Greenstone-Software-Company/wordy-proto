@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import Header from './Header';
-import Image from 'next/image';
+import { BellIcon, UserCircleIcon, CogIcon } from '@heroicons/react/24/outline';
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,13 +13,24 @@ const Layout = ({ children }) => {
     <div className="flex h-screen bg-wordy-bg">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header toggleSidebar={toggleSidebar} />
-        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-wordy-bg p-4 md:p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <Image src="/wordy-logo.svg" alt="Wordy Logo" width={120} height={40} />
+        <header className="bg-wordy-secondary-bg shadow-md py-4 px-6 flex items-center justify-between sticky top-0 z-10">
+          <button
+            onClick={toggleSidebar}
+            className="text-wordy-text hover:text-wordy-accent md:hidden"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div className="flex items-center space-x-4">
+            <BellIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
+            <UserCircleIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
+            <CogIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
           </div>
+        </header>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-wordy-bg">
           {children}
-        </div>
+        </main>
       </div>
     </div>
   );

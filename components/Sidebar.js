@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { HomeIcon, MicrophoneIcon, CalendarIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, MicrophoneIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { auth } from '../firebase';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -12,7 +13,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const menuItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/' },
     { name: 'Voice Notes', icon: MicrophoneIcon, path: '/voice-notes' },
-    { name: 'Calendar', icon: CalendarIcon, path: '/calendar' },
     { name: 'Profile', icon: UserIcon, path: '/profile' },
   ];
 
@@ -39,7 +39,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         } md:relative md:translate-x-0`}
       >
         <div className="flex items-center justify-between p-4 border-b border-wordy-accent">
-          <h1 className="text-2xl font-bold text-wordy-primary">Wordy</h1>
+          <div className="flex items-center">
+            <Image 
+              src="/wordy-logo.png" 
+              alt="Wordy Logo" 
+              width={40} 
+              height={40} 
+              className="rounded-full"
+            />
+          </div>
           <button onClick={toggleSidebar} className="md:hidden text-wordy-text hover:text-wordy-accent">
             <XMarkIcon className="h-6 w-6" />
           </button>
