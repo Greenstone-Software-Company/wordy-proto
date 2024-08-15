@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
 import Transcription from '../components/Transcription';
@@ -9,7 +8,6 @@ import FileUpload from '../components/VoiceNotes/FileUpload';
 import { transcribeAudio, getAIResponse } from '../lib/transcription';
 import { Waveform } from '@uiball/loaders';
 import WaveSurfer from 'wavesurfer.js';
-import { BellIcon, UserCircleIcon, CogIcon } from '@heroicons/react/24/outline';
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
@@ -135,79 +133,67 @@ export default function VoiceNotesPage() {
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>Wordy - Voice Notes</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-wordy-text">Voice Notes AI</h1>
+      <div className="bg-wordy-bg rounded-lg p-4 md:p-6">
+        <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
+        <div className="flex flex-col md:flex-row justify-between mb-6">
+          <button 
+            onClick={handleDeleteAll} 
+            className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors mb-4 md:mb-0"
+          >
+            Delete All
+          </button>
           <div className="flex space-x-4">
-            <BellIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
-            <UserCircleIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
-            <CogIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <button 
-                onClick={handleDeleteAll} 
-                className="bg-wordy-accent text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-colors"
-              >
-                Delete All
-              </button>
-              <AudioRecorder onNewRecording={handleNewRecording} />
-            </div>
+            <AudioRecorder onNewRecording={handleNewRecording} />
             <FileUpload onFileUpload={handleFileUpload} />
-            <RecordingsList
-              recordings={recordings}
-              onRecordingSelect={handleRecordingSelect}
-              onRecordingDelete={handleRecordingDelete}
-              onPlayPause={handlePlayPause}
-              currentlyPlaying={currentlyPlaying}
-            />
-          </div>
-
-          <div className="space-y-6">
-            {selectedRecording && (
-              <>
-                <div className="bg-wordy-secondary-bg rounded-lg p-6">
-                  <h2 className="text-xl font-semibold mb-4 text-wordy-text">Selected Recording</h2>
-                  <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4 h-24"></div>
-                  <div className="flex justify-between mb-4">
-                    <button
-                      onClick={() => handlePlayPause(selectedRecording.id)}
-                      className="bg-wordy-accent text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-colors"
-                    >
-                      {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
-                    </button>
-                    <button
-                      onClick={handleTranscribe}
-                      className="bg-wordy-primary text-white px-4 py-2 rounded-md hover:bg-opacity-80 transition-colors"
-                      disabled={isTranscribing}
-                    >
-                      {isTranscribing ? 'Transcribing...' : 'Transcribe'}
-                    </button>
-                  </div>
-                </div>
-                <Transcription transcription={transcription} isLoading={isTranscribing} />
-                <AIChat
-                  messages={messages}
-                  chatMessage={chatMessage}
-                  setChatMessage={setChatMessage}
-                  handleChatSubmit={handleChatSubmit}
-                  isLoading={isLoading}
-                  transcription={transcription}
-                />
-              </>
-            )}
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <RecordingsList
+            recordings={recordings}
+            onRecordingSelect={handleRecordingSelect}
+            onRecordingDelete={handleRecordingDelete}
+            onPlayPause={handlePlayPause}
+            currentlyPlaying={currentlyPlaying}
+          />
+          {selectedRecording && (
+            <div className="bg-wordy-secondary-bg rounded-lg p-4 md:p-6">
+              <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.id}</h2>
+              <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4 h-24"></div>
+              <div className="flex justify-between mb-4">
+                <button
+                  onClick={() => handlePlayPause(selectedRecording.id)}
+                  className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                >
+                  {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
+                </button>
+                <button
+                  onClick={handleTranscribe}
+                  className="bg-wordy-primary text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                  disabled={isTranscribing}
+                >
+                  {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+                </button>
+              </div>
+              <Transcription transcription={transcription} isLoading={isTranscribing} />
+              <AIChat
+                messages={messages}
+                chatMessage={chatMessage}
+                setChatMessage={setChatMessage}
+                handleChatSubmit={handleChatSubmit}
+                isLoading={isLoading}
+                transcription={transcription}
+              />
+            </div>
+          )}
+        </div>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
-    </Layout>
+    </>
   );
 }

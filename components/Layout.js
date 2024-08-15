@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import { BellIcon, UserCircleIcon, CogIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/router';
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -23,6 +25,10 @@ const Layout = ({ children }) => {
             </svg>
           </button>
           <div className="flex items-center space-x-4">
+            {/* Remove or comment out the Voice Notes button */}
+            {/* <button className="text-wordy-text hover:text-wordy-accent">
+              Voice Notes
+            </button> */}
             <BellIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
             <UserCircleIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
             <CogIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
