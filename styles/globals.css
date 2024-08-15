@@ -1,8 +1,76 @@
-/* @tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-wordy-dark text-wordy-text;
+:root {
+  --wordy-primary: #6366F1;
+  --wordy-bg: #1A202C;
+  --wordy-secondary-bg: #2D3748;
+  --wordy-text: #E2E8F0;
+  --wordy-accent: #4FD1C5;
+  --wordy-dark: #000000;
 }
+
+@layer base {
+  body {
+    @apply bg-wordy-dark text-wordy-text;
+  }
+}
+
+/* FullCalendar custom styles */
+.fc {
+  background-color: var(--wordy-secondary-bg);
+  color: var(--wordy-text);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--wordy-text) !important;
+}
+
+.fc-button-primary {
+  background-color: var(--wordy-primary) !important;
+  border-color: var(--wordy-primary) !important;
+  color: white !important;
+}
+
+.fc-button-primary:not(:disabled):active,
+.fc-button-primary:not(:disabled).fc-button-active,
+.fc-button-primary:hover {
+  background-color: var(--wordy-accent) !important;
+  border-color: var(--wordy-accent) !important;
+}
+
+.fc-daygrid-day {
+  background-color: var(--wordy-bg);
+  border-color: var(--wordy-secondary-bg);
+}
+
+.fc-col-header-cell {
+  background-color: var(--wordy-secondary-bg);
+  border-color: var(--wordy-secondary-bg);
+}
+
+.fc-day-today {
+  background-color: rgba(79, 209, 197, 0.2) !important;
+}
+
+.fc-col-header-cell-cushion,
+.fc-daygrid-day-number {
+  color: var(--wordy-text);
+}
+
+/* Toast notifications */
+.Toastify__toast {
+  background-color: var(--wordy-secondary-bg);
+  color: var(--wordy-text);
+}
+
+.Toastify__progress-bar {
+  background-color: var(--wordy-accent);
+}
+
+/* Add any other global styles here */

@@ -1,16 +1,13 @@
-// pages/_app.js
-<link rel="icon" href="/favicon.ico" />
 import '../styles/globals.css';
-import { AppProvider } from '../context/appcontext';
-import ErrorBoundary from '../components/ErrorBoundary';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function MyApp({ Component, pageProps }) {
   return (
-    <ErrorBoundary>
-      <AppProvider>
-        <Component {...pageProps} />
-      </AppProvider>
-    </ErrorBoundary>
+    <>
+      <Component {...pageProps} />
+      <ToastContainer />
+    </>
   );
 }
 

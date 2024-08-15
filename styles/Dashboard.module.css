@@ -1,0 +1,115 @@
+.dashboardContainer {
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem;
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.dashboardTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--wordy-text);
+}
+
+.dashboardActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+}
+
+.btnRefresh {
+  color: var(--wordy-text);
+}
+
+.btnRefresh:hover {
+  background-color: var(--wordy-secondary-bg);
+}
+
+.btnSync {
+  background-color: var(--wordy-accent);
+  color: white;
+}
+
+.btnSync:hover {
+  opacity: 0.8;
+}
+
+.btnAddEvent {
+  background-color: var(--wordy-primary);
+  color: white;
+}
+
+.btnAddEvent:hover {
+  opacity: 0.8;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(6, minmax(100px, auto));
+  gap: 1rem;
+}
+
+.widget {
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.widget:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Calendar styles */
+.widget :global(.fc) {
+  height: 100%;
+}
+
+.widget :global(.fc-header-toolbar) {
+  margin-bottom: 0.5em !important;
+}
+
+.widget :global(.fc-button) {
+  background-color: var(--wordy-primary) !important;
+  border-color: var(--wordy-primary) !important;
+}
+
+.widget :global(.fc-button:hover) {
+  background-color: var(--wordy-accent) !important;
+  border-color: var(--wordy-accent) !important;
+}
+
+.widget :global(.fc-daygrid-day) {
+  background-color: var(--wordy-bg);
+}
+
+.widget :global(.fc-day-today) {
+  background-color: rgba(79, 209, 197, 0.1) !important;
+}
+
+.widget :global(.fc-event) {
+  background-color: var(--wordy-accent);
+  border-color: var(--wordy-accent);
+}
+
+.widget :global(.fc-event-title) {
+  font-weight: bold;
+}

@@ -7,14 +7,12 @@ module.exports = {
     extend: {
       colors: {
         'wordy-primary': '#6366F1',
-        'wordy-bg': '#1A202C',
-        'wordy-secondary-bg': '#2D3748',
-        'wordy-text': '#E2E8F0',
-        'wordy-accent': '#4FD1C5',
-        'wordy-dark': '#000000', // Add this line for 'wordy-dark'
-      },
-      fontFamily: {
-        'sans': ['Inter', 'Roboto', 'system-ui', 'sans-serif'],
+        'wordy-secondary': '#4F46E5',
+        'wordy-accent': '#10B981',
+        'wordy-background': '#1F2937',
+        'wordy-surface': '#374151',
+        'wordy-text': '#F3F4F6',
+        'wordy-dark': '#000000',
       },
     },
   },

@@ -1,7 +1,5 @@
-// pages/voice-notes.js
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
 import Transcription from '../components/Transcription';
@@ -10,7 +8,6 @@ import FileUpload from '../components/VoiceNotes/FileUpload';
 import { transcribeAudio, getAIResponse } from '../lib/transcription';
 import { Waveform } from '@uiball/loaders';
 import WaveSurfer from 'wavesurfer.js';
-import ProtectedRoute from '../components/ProtectedRoute';
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
@@ -89,7 +86,7 @@ export default function VoiceNotesPage() {
       }
 
       setTranscription(data.transcription);
-      // Update recordings state if needed
+      setSelectedRecording({ ...selectedRecording, transcription: data.transcription });
     } catch (error) {
       console.error('Transcription error:', error);
       setError(`Failed to transcribe audio: ${error.message}`);
@@ -136,61 +133,67 @@ export default function VoiceNotesPage() {
   };
 
   return (
-    <ProtectedRoute>
-      <Layout>
-        <Head>
-          <title>Wordy - Voice Notes</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+    <>
+      <Head>
+        <title>Wordy - Voice Notes</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
-        <div className="bg-wordy-gray rounded-lg p-6">
-          <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
-          <div className="flex justify-between mb-6">
-            <button onClick={handleDeleteAll} className="bg-wordy-light text-wordy-text px-4 py-2 rounded hover:bg-wordy-accent transition-colors">Delete All</button>
+      <div className="bg-wordy-bg rounded-lg p-4 md:p-6">
+        <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
+        <div className="flex flex-col md:flex-row justify-between mb-6">
+          <button 
+            onClick={handleDeleteAll} 
+            className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors mb-4 md:mb-0"
+          >
+            Delete All
+          </button>
+          <div className="flex space-x-4">
             <AudioRecorder onNewRecording={handleNewRecording} />
-          </div>
-          <FileUpload onFileUpload={handleFileUpload} />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <RecordingsList
-              recordings={recordings}
-              onRecordingSelect={handleRecordingSelect}
-              onRecordingDelete={handleRecordingDelete}
-              onPlayPause={handlePlayPause}
-              currentlyPlaying={currentlyPlaying}
-            />
-            {selectedRecording && (
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.id}</h2>
-                <div ref={waveformRef} className="bg-wordy-light p-4 rounded mb-4 h-24"></div>
-                <div className="flex justify-between mb-4">
-                  <button
-                    onClick={() => handlePlayPause(selectedRecording.id)}
-                    className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
-                  >
-                    {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
-                  </button>
-                  <button
-                    onClick={handleTranscribe}
-                    className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
-                    disabled={isTranscribing}
-                  >
-                    {isTranscribing ? 'Transcribing...' : 'Transcribe'}
-                  </button>
-                </div>
-                <Transcription transcription={transcription} isLoading={isTranscribing} />
-                <AIChat
-                  messages={messages}
-                  chatMessage={chatMessage}
-                  setChatMessage={setChatMessage}
-                  handleChatSubmit={handleChatSubmit}
-                  isLoading={isLoading}
-                  transcription={transcription} // Pass the transcription to AIChat component
-                />
-              </div>
-            )}
+            <FileUpload onFileUpload={handleFileUpload} />
           </div>
         </div>
-      </Layout>
-    </ProtectedRoute>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <RecordingsList
+            recordings={recordings}
+            onRecordingSelect={handleRecordingSelect}
+            onRecordingDelete={handleRecordingDelete}
+            onPlayPause={handlePlayPause}
+            currentlyPlaying={currentlyPlaying}
+          />
+          {selectedRecording && (
+            <div className="bg-wordy-secondary-bg rounded-lg p-4 md:p-6">
+              <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.id}</h2>
+              <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4 h-24"></div>
+              <div className="flex justify-between mb-4">
+                <button
+                  onClick={() => handlePlayPause(selectedRecording.id)}
+                  className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                >
+                  {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
+                </button>
+                <button
+                  onClick={handleTranscribe}
+                  className="bg-wordy-primary text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                  disabled={isTranscribing}
+                >
+                  {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+                </button>
+              </div>
+              <Transcription transcription={transcription} isLoading={isTranscribing} />
+              <AIChat
+                messages={messages}
+                chatMessage={chatMessage}
+                setChatMessage={setChatMessage}
+                handleChatSubmit={handleChatSubmit}
+                isLoading={isLoading}
+                transcription={transcription}
+              />
+            </div>
+          )}
+        </div>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
+      </div>
+    </>
   );
 }

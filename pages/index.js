@@ -1,23 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Layout from '../components/Layout';
-import AudioRecorder from '../components/AudioRecorder';
-import RecordingsList from '../components/VoiceNotes/RecordingsList';
-import Transcription from '../components/Transcription';
-import AIChat from '../components/VoiceNotes/AIChat';
+import Dashboard from '../components/Dashboard';
+import VoiceNotes from '../components/VoiceNotes';
+import Sidebar from '../components/Sidebar';
 import { transcribeAudio, getAIResponse } from '../lib/api';
-import { Waveform } from '@uiball/loaders';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/router';
+import { getGoogleAuthUrl } from '../lib/googleCalendar';
 
-export default function VoiceNotes() {
+export default function Home() {
+  const [activeView, setActiveView] = useState('dashboard');
   const [recordings, setRecordings] = useState([]);
   const [selectedRecording, setSelectedRecording] = useState(null);
   const [transcription, setTranscription] = useState('');
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [chatMessage, setChatMessage] = useState('');
-  const [chatResponse, setChatResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        // Uncomment this line to enforce authentication
+        // router.push('/login');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const handleNewRecording = (newRecording) => {
     setRecordings([newRecording, ...recordings]);
@@ -59,51 +81,82 @@ export default function VoiceNotes() {
     setRecordings([]);
     setSelectedRecording(null);
     setTranscription('');
-    setMessages([]);
   };
 
-  const handleTranscriptionUpdate = (newTranscription) => {
-    setTranscription((prevTranscription) => prevTranscription + ' ' + newTranscription);
+  const handleGoogleCalendarSync = async () => {
+    try {
+      const authUrl = await getGoogleAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Failed to start Google Calendar sync', error);
+      setError('Failed to start Google Calendar sync. Please try again.');
+    }
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <Layout>
+    <>
       <Head>
-        <title>Voice Notes AI</title>
+        <title>Wordy - Dashboard & Voice Notes</title>
+        <meta name="description" content="Wordy Dashboard & Voice Notes" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      
+      <div className="flex h-screen bg-wordy-background">
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="bg-wordy-secondary-bg p-4 flex justify-between items-center">
+            <button onClick={toggleSidebar} className="md:hidden text-wordy-text">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-2xl font-bold text-wordy-primary">Wordy</h1>
+          </header>
 
-      <div className="bg-wordy-gray rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-6">Voice Notes AI</h1>
-        <div className="flex justify-between mb-6">
-          <button onClick={handleDeleteAll} className="bg-wordy-light text-wordy-text px-4 py-2 rounded hover:bg-wordy-accent transition-colors">Delete All</button>
-          <AudioRecorder onNewRecording={handleNewRecording} onTranscriptionUpdate={handleTranscriptionUpdate} />
-        </div>
-        <input type="text" placeholder="Search recordings..." className="w-full p-2 rounded bg-wordy-light text-wordy-text mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <RecordingsList recordings={recordings} onRecordingSelect={handleRecordingSelect} />
-          </div>
-          <div>
-            {selectedRecording && (
-              <>
-                <h2 className="text-xl font-semibold mb-4">Recording {selectedRecording.id}</h2>
-                <div className="bg-wordy-light p-4 rounded mb-4 h-24 flex items-center justify-center">
-                  <Waveform size={40} lineWeight={3.5} speed={1} color="white" />
-                </div>
-                <div className="flex justify-between mb-4">
-                  <button className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors">Play</button>
-                  <button onClick={handleTranscribe} className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors">
-                    Transcribe
-                  </button>
-                </div>
-                <Transcription transcription={transcription} isLoading={isTranscribing} />
-                <AIChat onSendMessage={handleSendMessage} messages={messages} selectedRecording={selectedRecording} />
-              </>
-            )}
-          </div>
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-wordy-background">
+            <div className="container mx-auto px-6 py-8">
+              <div className="mb-6">
+                <button
+                  onClick={() => setActiveView('dashboard')}
+                  className={`mr-4 px-4 py-2 rounded ${activeView === 'dashboard' ? 'bg-wordy-primary text-white' : 'bg-wordy-secondary-bg text-wordy-text'}`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => setActiveView('voiceNotes')}
+                  className={`px-4 py-2 rounded ${activeView === 'voiceNotes' ? 'bg-wordy-primary text-white' : 'bg-wordy-secondary-bg text-wordy-text'}`}
+                >
+                  Voice Notes
+                </button>
+              </div>
+              
+              {activeView === 'dashboard' ? (
+                <Dashboard
+                  handleGoogleCalendarSync={handleGoogleCalendarSync}
+                />
+              ) : (
+                <VoiceNotes
+                  recordings={recordings}
+                  selectedRecording={selectedRecording}
+                  transcription={transcription}
+                  isTranscribing={isTranscribing}
+                  messages={messages}
+                  handleNewRecording={handleNewRecording}
+                  handleRecordingSelect={handleRecordingSelect}
+                  handleTranscribe={handleTranscribe}
+                  handleSendMessage={handleSendMessage}
+                  handleDeleteAll={handleDeleteAll}
+                />
+              )}
+            </div>
+          </main>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
