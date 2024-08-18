@@ -29,9 +29,7 @@ const Layout = ({ children }) => {
             {/* <button className="text-wordy-text hover:text-wordy-accent">
               Voice Notes
             </button> */}
-            <BellIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
-            <UserCircleIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
-            <CogIcon className="h-6 w-6 text-wordy-text cursor-pointer" />
+            
           </div>
         </header>
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-wordy-bg">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, isSameDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 
 const Calendar = ({ events, isLoading, handleDateClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());

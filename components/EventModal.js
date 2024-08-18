@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { XMarkIcon, LinkIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { db, auth } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -18,10 +18,33 @@ const EventModal = ({ isOpen, onClose, onEventCreate, selectedDate }) => {
       return;
     }
 
+    const formatTimeString = (timeString) => {
+      return timeString.length === 5 ? timeString : `${timeString}:00`;
+    };
+
+    const getValidDate = (date) => {
+      if (date instanceof Date && isValid(date)) {
+        return date;
+      }
+      // If it's a string, try to parse it
+      if (typeof date === 'string') {
+        const parsedDate = new Date(date);
+        if (isValid(parsedDate)) {
+          return parsedDate;
+        }
+      }
+      // If all else fails, return current date
+      console.warn('Invalid date provided, using current date');
+      return new Date();
+    };
+
+    const validSelectedDate = getValidDate(selectedDate);
+    const formattedDate = format(validSelectedDate, 'yyyy-MM-dd');
+
     const newEvent = {
       title,
-      start: new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${startTime}`),
-      end: new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${endTime}`),
+      start: parse(`${formattedDate} ${formatTimeString(startTime)}`, 'yyyy-MM-dd HH:mm', new Date()),
+      end: parse(`${formattedDate} ${formatTimeString(endTime)}`, 'yyyy-MM-dd HH:mm', new Date()),
       meetingLink,
       userId: user.uid,
     };

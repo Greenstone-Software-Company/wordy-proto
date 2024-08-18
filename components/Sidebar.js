@@ -13,7 +13,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const menuItems = [
     { name: 'Dashboard', icon: HomeIcon, path: '/' },
     { name: 'Voice Notes', icon: MicrophoneIcon, path: '/voice-notes' },
-    { name: 'Profile', icon: UserIcon, path: '/profile' },
+    { name: 'Profile', icon: UserIcon, path: '/profile' }, // Update this line
   ];
 
   const handleLogout = async () => {

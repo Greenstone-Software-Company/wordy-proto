@@ -9,7 +9,7 @@ import EventModal from './EventModal';
 import { getGoogleAuthUrl, getGoogleEvents } from '../lib/googleCalendar';
 import styles from '../styles/Dashboard.module.css';
 
-const Dashboard = ({ handleGoogleCalendarSync }) => {
+const Dashboard = () => {
   const [events, setEvents] = useState([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -33,21 +33,19 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
     { id: 3, title: 'Client Presentation', summary: 'Presented project milestones to the client', date: '2024-08-14', transcription: 'Lorem ipsum...', actionItems: ['Send follow-up email', 'Update project status report'] },
   ]);
 
+  // Fetch Google Calendar events only if user is authenticated
   const fetchEvents = useCallback(async () => {
+    const tokenExists = document.cookie.includes('google_access_token');
+    if (!tokenExists) {
+      console.log('User not authenticated with Google, skipping event fetch.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      if (code) {
-        const googleEvents = await getGoogleEvents(code);
-        setEvents(googleEvents.map(event => ({
-          title: event.summary,
-          start: event.start.dateTime || event.start.date,
-          end: event.end.dateTime || event.end.date,
-          meetingLink: event.hangoutLink || '',
-        })));
-        toast.success('Events synced successfully!');
-      }
+      const googleEvents = await getGoogleEvents();
+      setEvents(googleEvents);
+      toast.success('Events synced successfully!');
     } catch (error) {
       console.error('Error fetching events:', error);
       setError('Failed to load events. Please try again.');
@@ -57,26 +55,25 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
     }
   }, []);
 
-  const fetchQuickStats = useCallback(async () => {
-    // Simulating an API call with setTimeout
-    setTimeout(() => {
-      setQuickStats({
-        totalRecordings: 24,
-        totalDuration: '3h 45m',
-        recordingsToday: 3,
-        transcriptions: 18
-      });
-    }, 1000);
-  }, []);
-
   useEffect(() => {
-    fetchEvents();
-    fetchQuickStats();
-  }, [fetchEvents, fetchQuickStats]);
+    // Only fetch events if the user is authenticated with Google
+    if (document.cookie.includes('google_access_token')) {
+      fetchEvents();
+    }
+  }, [fetchEvents]);
+
+  const handleGoogleCalendarSync = async () => {
+    try {
+      const authUrl = await getGoogleAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Failed to start Google Calendar sync', error);
+      toast.error('Failed to start Google Calendar sync. Please try again.');
+    }
+  };
 
   const handleRefresh = () => {
     fetchEvents();
-    fetchQuickStats();
     toast.info('Refreshing dashboard data...');
   };
 
@@ -92,7 +89,6 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
   };
 
   const handleMeetingExpand = (meetingId) => {
-    // Implement the logic to expand meeting details
     console.log(`Expanding meeting ${meetingId}`);
   };
 
@@ -101,9 +97,9 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
   };
 
   return (
-    <div className={`p-4 bg-wordy-bg text-wordy-text ${styles.dashboardContainer}`}>
+    <div className={`p-6 bg-wordy-bg text-wordy-text ${styles.dashboardContainer}`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex space-x-4">
           <button onClick={handleRefresh} className="btn btn-primary flex items-center px-4 py-2 bg-wordy-primary text-white rounded hover:bg-opacity-80 transition-colors">
             <ChartBarIcon className="h-5 w-5 mr-2" />
@@ -123,11 +119,11 @@ const Dashboard = ({ handleGoogleCalendarSync }) => {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <RecentMeetings meetings={recentMeetings} onMeetingExpand={handleMeetingExpand} />
         </div>
-        <div className="col-span-1">
+        <div className="space-y-6">
           <Calendar events={events} isLoading={isLoading} handleDateClick={handleDateClick} />
           <QuickStats quickStats={quickStats} />
         </div>
