@@ -1,6 +1,6 @@
 // firebase.js
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -19,4 +19,25 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { auth, db, storage, app };
+const googleProvider = new GoogleAuthProvider();
+
+const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with Google", error);
+    throw error;
+  }
+};
+
+const signOutUser = async () => {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error("Error signing out", error);
+    throw error;
+  }
+};
+
+export { auth, db, storage, app, signInWithGoogle, signOutUser };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
 import Transcription from '../components/Transcription';
@@ -8,6 +9,9 @@ import FileUpload from '../components/VoiceNotes/FileUpload';
 import { transcribeAudio, getAIResponse } from '../lib/transcription';
 import { Waveform } from '@uiball/loaders';
 import WaveSurfer from 'wavesurfer.js';
+import ProtectedRoute from '../components/ProtectedRoute';
+import { db, auth } from '../firebase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
@@ -22,6 +26,10 @@ export default function VoiceNotesPage() {
 
   const waveformRef = useRef(null);
   const wavesurfer = useRef(null);
+
+  useEffect(() => {
+    fetchRecordings();
+  }, []);
 
   useEffect(() => {
     if (waveformRef.current && selectedRecording) {
@@ -42,6 +50,30 @@ export default function VoiceNotesPage() {
       wavesurfer.current.load(selectedRecording.url);
     }
   }, [selectedRecording]);
+
+  const fetchRecordings = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const recordingsRef = collection(db, 'recordings');
+    const q = query(
+      recordingsRef,
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    try {
+      const querySnapshot = await getDocs(q);
+      const fetchedRecordings = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setRecordings(fetchedRecordings);
+    } catch (error) {
+      console.error('Error fetching recordings:', error);
+      setError('Failed to fetch recordings');
+    }
+  };
 
   const handleNewRecording = (newRecording) => {
     setRecordings([newRecording, ...recordings]);
@@ -133,67 +165,61 @@ export default function VoiceNotesPage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>Wordy - Voice Notes</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <ProtectedRoute>
+      <Layout>
+        <Head>
+          <title>Wordy - Voice Notes</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <div className="bg-wordy-bg rounded-lg p-4 md:p-6">
-        <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
-        <div className="flex flex-col md:flex-row justify-between mb-6">
-          <button 
-            onClick={handleDeleteAll} 
-            className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors mb-4 md:mb-0"
-          >
-            Delete All
-          </button>
-          <div className="flex space-x-4">
+        <div className="bg-wordy-gray rounded-lg p-6">
+          <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
+          <div className="flex justify-between mb-6">
+            <button onClick={handleDeleteAll} className="bg-wordy-light text-wordy-text px-4 py-2 rounded hover:bg-wordy-accent transition-colors">Delete All</button>
             <AudioRecorder onNewRecording={handleNewRecording} />
-            <FileUpload onFileUpload={handleFileUpload} />
+          </div>
+          <FileUpload onFileUpload={handleFileUpload} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <RecordingsList
+              recordings={recordings}
+              onRecordingSelect={handleRecordingSelect}
+              onRecordingDelete={handleRecordingDelete}
+              onPlayPause={handlePlayPause}
+              currentlyPlaying={currentlyPlaying}
+            />
+            {selectedRecording && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.id}</h2>
+                <div ref={waveformRef} className="bg-wordy-light p-4 rounded mb-4 h-24"></div>
+                <div className="flex justify-between mb-4">
+                  <button
+                    onClick={() => handlePlayPause(selectedRecording.id)}
+                    className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                  >
+                    {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
+                  </button>
+                  <button
+                    onClick={handleTranscribe}
+                    className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+                    disabled={isTranscribing}
+                  >
+                    {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+                  </button>
+                </div>
+                <Transcription transcription={transcription} isLoading={isTranscribing} />
+                <AIChat
+                  messages={messages}
+                  chatMessage={chatMessage}
+                  setChatMessage={setChatMessage}
+                  handleChatSubmit={handleChatSubmit}
+                  isLoading={isLoading}
+                  transcription={transcription}
+                />
+              </div>
+            )}
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <RecordingsList
-            recordings={recordings}
-            onRecordingSelect={handleRecordingSelect}
-            onRecordingDelete={handleRecordingDelete}
-            onPlayPause={handlePlayPause}
-            currentlyPlaying={currentlyPlaying}
-          />
-          {selectedRecording && (
-            <div className="bg-wordy-secondary-bg rounded-lg p-4 md:p-6">
-              <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.id}</h2>
-              <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4 h-24"></div>
-              <div className="flex justify-between mb-4">
-                <button
-                  onClick={() => handlePlayPause(selectedRecording.id)}
-                  className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
-                >
-                  {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
-                </button>
-                <button
-                  onClick={handleTranscribe}
-                  className="bg-wordy-primary text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
-                  disabled={isTranscribing}
-                >
-                  {isTranscribing ? 'Transcribing...' : 'Transcribe'}
-                </button>
-              </div>
-              <Transcription transcription={transcription} isLoading={isTranscribing} />
-              <AIChat
-                messages={messages}
-                chatMessage={chatMessage}
-                setChatMessage={setChatMessage}
-                handleChatSubmit={handleChatSubmit}
-                isLoading={isLoading}
-                transcription={transcription}
-              />
-            </div>
-          )}
-        </div>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
-      </div>
-    </>
+      </Layout>
+    </ProtectedRoute>
   );
 }

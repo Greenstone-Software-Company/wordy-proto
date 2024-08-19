@@ -1,0 +1,82 @@
+body {
+    font-family: Arial, sans-serif;
+    width: 300px;
+    padding: 10px;
+    background-color: #1F2937;
+    color: #F3F4F6;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #6366F1;
+}
+
+.status {
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #6366F1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #4F46E5;
+}
+
+.btn-danger {
+    background-color: #EF4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #DC2626;
+}
+
+.recording-info {
+    margin-bottom: 10px;
+}
+
+.recent-recordings {
+    width: 100%;
+}
+
+.recent-recordings h2 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+#recordingsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#recordingsList li {
+    background-color: #374151;
+    margin-bottom: 5px;
+    padding: 5px;
+    border-radius: 4px;
+}

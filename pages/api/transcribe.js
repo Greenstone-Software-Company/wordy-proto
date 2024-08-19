@@ -2,6 +2,8 @@ import formidable from 'formidable';
 import fs from 'fs';
 import axios from 'axios';
 import FormData from 'form-data';
+import { getAuth } from 'firebase-admin/auth';
+import { db } from '../../firebase';
 
 export const config = {
   api: {
@@ -28,7 +30,25 @@ export default async function handler(req, res) {
     }
 
     try {
+      // Verify the Firebase ID token
+      const idToken = req.headers.authorization?.split('Bearer ')[1];
+      if (!idToken) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const decodedToken = await getAuth().verifyIdToken(idToken);
+      const userId = decodedToken.uid;
+
       const transcription = await transcribeAudio(audioFile);
+      
+      // Save the transcription to Firestore
+      await db.collection('recordings').add({
+        userId: userId,
+        transcription: transcription,
+        timestamp: new Date(),
+        filename: audioFile.originalFilename
+      });
+
       res.status(200).json({ transcription });
     } catch (error) {
       console.error('Error transcribing audio:', error);
