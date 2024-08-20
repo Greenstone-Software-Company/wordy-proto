@@ -1,4 +1,3 @@
-// pages/login.js
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -27,46 +26,52 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-wordy-bg">
-      <div className="bg-wordy-secondary-bg p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-wordy-text">Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-[#141414]">
+      <div className="bg-[#141414] p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 className="text-3xl font-bold mb-6 text-center text-white">Login to Wordy</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-wordy-text mb-2">Email</label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-white">Email</label>
             <input
               type="email"
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 rounded bg-wordy-bg text-wordy-text"
+              className="w-full p-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#4AB586] bg-[#141414] text-white"
               required
             />
           </div>
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-wordy-text mb-2">Password</label>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-white">Password</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 rounded bg-wordy-bg text-wordy-text"
+              className="w-full p-2 rounded border border-gray-300 focus:ring-2 focus:ring-[#4AB586] bg-[#141414] text-white"
               required
             />
           </div>
-          <button type="submit" className="w-full bg-wordy-primary text-white p-2 rounded hover:bg-opacity-80 mb-4">
+          <button
+            type="submit"
+            className="w-full bg-[#4AB586] text-white p-2 rounded-lg font-semibold hover:bg-opacity-80 transition-colors"
+          >
             Login
           </button>
         </form>
-        <Link href="/register" className="block text-center bg-wordy-accent text-white p-2 rounded hover:bg-opacity-80 mb-4">
-          Register
-        </Link>
         <button 
           onClick={handleDevLogin} 
-          className="w-full bg-gray-500 text-white p-2 rounded hover:bg-opacity-80"
+          className="w-full bg-gray-500 text-white p-2 rounded-lg mt-4 hover:bg-opacity-80 transition-colors"
         >
           Dev Login (Skip Authentication)
         </button>
+        <p className="text-sm text-center text-white mt-6">
+          Don’t have an account?{' '}
+          <Link href="/register">
+            <span className="text-[#4AB586] font-semibold cursor-pointer">Sign Up</span>
+          </Link>
+        </p>
       </div>
     </div>
   );
