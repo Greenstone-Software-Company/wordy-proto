@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next export"
   },
   "dependencies": {
     "@fullcalendar/core": "^5.11.5",
@@ -14,17 +15,18 @@
     "@fullcalendar/interaction": "^5.11.5",
     "@fullcalendar/react": "^5.11.5",
     "@fullcalendar/timegrid": "^5.11.5",
-    "@heroicons/react": "^2.0.13",
+    "@heroicons/react": "^2.1.5",
     "@uiball/loaders": "^1.3.1",
     "axios": "^1.7.3",
     "date-fns": "^3.6.0",
     "firebase": "^10.13.0",
+    "firebase-admin": "^12.3.1",
     "form-data": "^4.0.0",
     "formidable": "^3.5.1",
     "googleapis": "^140.0.1",
-    "next": "^14.2.5",
+    "next": "^14.2.6",
     "nookies": "^2.5.2",
-    "openai": "^4.55.1",
+    "openai": "^4.0.0",
     "path": "^0.12.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -33,7 +35,10 @@
     "react-spinners": "^0.14.1",
     "react-toastify": "^10.0.5",
     "styled-components": "^6.1.12",
-    "wavesurfer.js": "^7.8.2"
+    "uuid": "^10.0.0",
+    "waveformer": "^1.0.4",
+    "wavesurfer.js": "^6.6.4"
+    
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",

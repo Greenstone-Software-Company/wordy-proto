@@ -8,11 +8,11 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
 
   const handleRenameClick = (id, currentName) => {
     setEditingId(id);
-    setEditName(currentName);
+    setEditName(currentName || ''); // Ensure we have a string to edit
   };
 
   const handleRenameSubmit = (id) => {
-    if (editName.trim() === '') {
+    if (!editName || editName.trim() === '') {
       toast.error('Recording name cannot be empty');
       return;
     }
@@ -42,9 +42,9 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
         <p className="text-wordy-text text-center italic">No recordings found</p>
       ) : (
         <ul className="space-y-2">
-          {recordings.map((recording) => (
+          {recordings.map((recording, index) => (
             <li
-              key={recording.id}
+              key={recording.id ? recording.id : `${recording.name}-${index}`} // Ensure the key is unique and consistent
               className="bg-wordy-bg p-3 rounded shadow cursor-pointer hover:bg-opacity-80 transition-colors"
             >
               <div className="flex items-center justify-between">

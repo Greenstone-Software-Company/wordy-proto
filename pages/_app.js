@@ -1,14 +1,22 @@
 import '../styles/globals.css';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { auth } from '../firebase';
 
 function MyApp({ Component, pageProps }) {
-  return (
-    <>
-      <Component {...pageProps} />
-      <ToastContainer />
-    </>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user && router.pathname !== '/login') {
+        router.push('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  return <Component {...pageProps} />;
 }
 
 export default MyApp;

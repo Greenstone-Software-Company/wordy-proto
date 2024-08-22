@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MicrophoneIcon, PauseIcon, StopIcon, PlayIcon } from '@heroicons/react/24/solid';
-import WaveSurfer from 'wavesurfer.js';
+import { MicrophoneIcon, PauseIcon, StopIcon } from '@heroicons/react/24/solid';
 
 const AudioRecorder = ({ onNewRecording }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -9,28 +8,11 @@ const AudioRecorder = ({ onNewRecording }) => {
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
-  const waveformRef = useRef(null);
-  const wavesurfer = useRef(null);
 
   useEffect(() => {
-    if (waveformRef.current) {
-      wavesurfer.current = WaveSurfer.create({
-        container: waveformRef.current,
-        waveColor: 'violet',
-        progressColor: 'purple',
-        cursorColor: 'navy',
-        barWidth: 2,
-        barRadius: 3,
-        cursorWidth: 1,
-        height: 100,
-        barGap: 3,
-      });
-    }
-
+    // Cleanup interval on component unmount
     return () => {
-      if (wavesurfer.current) {
-        wavesurfer.current.destroy();
-      }
+      clearInterval(timerInterval.current);
     };
   }, []);
 
@@ -46,15 +28,12 @@ const AudioRecorder = ({ onNewRecording }) => {
       mediaRecorder.current.onstop = () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
-
-        if (wavesurfer.current) {
-          wavesurfer.current.load(audioUrl);
-        }
+        const fileName = `recording_${Date.now()}.wav`;
 
         const newRecording = {
           id: Date.now().toString(),
           url: audioUrl,
-          file: new File([audioBlob], 'recording.wav', { type: 'audio/wav' }),
+          file: new File([audioBlob], fileName, { type: 'audio/wav' }),
           name: `Recording ${new Date().toLocaleString()}`,
           duration: formatTime(recordingTime),
           timestamp: new Date().toISOString(),
@@ -158,7 +137,6 @@ const AudioRecorder = ({ onNewRecording }) => {
           <span className="font-semibold">{formatTime(recordingTime)}</span>
         )}
       </div>
-      <div ref={waveformRef} className="mt-4"></div>
     </div>
   );
 };
