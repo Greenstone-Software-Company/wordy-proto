@@ -6,13 +6,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'wordy-primary': '#6366F1',
-        'wordy-secondary': '#4F46E5',
-        'wordy-accent': '#10B981',
-        'wordy-background': '#1F2937',
-        'wordy-surface': '#374151',
-        'wordy-text': '#F3F4F6',
-        'wordy-dark': '#000000',
+        'wordy-primary': 'var(--wordy-primary)',
+        'wordy-secondary': 'var(--wordy-secondary)',
+        'wordy-accent': 'var(--wordy-accent)',
+        'wordy-background': 'var(--wordy-background)',
+        'wordy-surface': 'var(--wordy-surface)',
+        'wordy-text': 'var(--wordy-text)',
+        'wordy-dark': 'var(--wordy-dark)',
       },
     },
   },

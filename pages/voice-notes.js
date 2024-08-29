@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
 import Transcription from '../components/Transcription';
-import AIChat from '../components/VoiceNotes/AIChat';
+import AIChat from '../components/AIChat';
 import FileUpload from '../components/VoiceNotes/FileUpload';
 import { db, auth, storage } from '../firebase';
 import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-toastify';
+
+// Dynamically import WaveSurfer with ssr option set to false
+const WaveSurfer = dynamic(() => import('wavesurfer.js'), { ssr: false });
+
+// ... (rest of the code remains the same)
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
@@ -22,6 +28,8 @@ export default function VoiceNotesPage() {
   const [error, setError] = useState(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
 
+  const waveformRef = useRef(null);
+  const wavesurfer = useRef(null);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +37,9 @@ export default function VoiceNotesPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && waveformRef.current && selectedRecording) {
+      initWaveSurfer();
+    }
     if (selectedRecording && audioRef.current) {
       audioRef.current.src = selectedRecording.url;
       audioRef.current.load();
@@ -56,6 +67,35 @@ export default function VoiceNotesPage() {
     } catch (error) {
       console.error('Error fetching recordings:', error);
       setError('Failed to fetch recordings');
+    }
+  };
+
+  const initWaveSurfer = async () => {
+    if (wavesurfer.current) {
+      wavesurfer.current.destroy();
+    }
+
+    wavesurfer.current = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: '#4AB586',
+      progressColor: '#2C7D59',
+      cursorColor: '#2C7D59',
+      barWidth: 2,
+      barRadius: 3,
+      cursorWidth: 1,
+      height: 80,
+      barGap: 2,
+      responsive: true,
+      normalize: true,
+    });
+
+    if (selectedRecording.url) {
+      try {
+        await wavesurfer.current.load(selectedRecording.url);
+      } catch (error) {
+        console.error('Error loading audio:', error);
+        setError('Failed to load audio. Please try again.');
+      }
     }
   };
 

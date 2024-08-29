@@ -4,88 +4,117 @@
 
 :root {
   --wordy-primary: #6366F1;
-  --wordy-bg: #1A202C;
-  --wordy-secondary-bg: #2D3748;
-  --wordy-text: #E2E8F0;
-  --wordy-accent: #4FD1C5;
-  --wordy-dark: #000000;
+  --wordy-secondary: #4F46E5;
+  --wordy-accent: #10B981;
+  --wordy-background: #1F2937;
+  --wordy-surface: #374151;
+  --wordy-text: #F3F4F6;
+  --wordy-dark: #111827;
 }
 
 @layer base {
   body {
-    @apply bg-wordy-dark text-wordy-text;
+    @apply bg-wordy-background text-wordy-text;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-wordy-text;
+  }
+
+  a {
+    @apply text-wordy-accent hover:text-wordy-primary transition-colors;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-semibold transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-wordy-primary text-white hover:bg-opacity-80;
+  }
+
+  .btn-secondary {
+    @apply bg-wordy-secondary text-white hover:bg-opacity-80;
+  }
+
+  .btn-accent {
+    @apply bg-wordy-accent text-white hover:bg-opacity-80;
+  }
+
+  .input {
+    @apply w-full p-3 rounded-lg bg-wordy-surface text-wordy-text border border-wordy-accent focus:outline-none focus:ring-2 focus:ring-wordy-primary;
+  }
+
+  .card {
+    @apply bg-wordy-surface rounded-lg shadow-lg p-6;
   }
 }
 
 /* FullCalendar custom styles */
 .fc {
-  background-color: var(--wordy-secondary-bg);
-  color: var(--wordy-text);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  @apply bg-wordy-surface text-wordy-text rounded-lg p-4;
 }
 
 .fc-toolbar-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: var(--wordy-text) !important;
+  @apply text-xl font-bold text-wordy-text;
 }
 
 .fc-button-primary {
-  background-color: var(--wordy-primary) !important;
-  border-color: var(--wordy-primary) !important;
-  color: white !important;
+  @apply bg-wordy-primary border-wordy-primary text-white;
 }
 
 .fc-button-primary:not(:disabled):active,
 .fc-button-primary:not(:disabled).fc-button-active,
 .fc-button-primary:hover {
-  background-color: var(--wordy-accent) !important;
-  border-color: var(--wordy-accent) !important;
+  @apply bg-wordy-secondary border-wordy-secondary;
 }
 
 .fc-daygrid-day {
-  background-color: var(--wordy-bg);
-  border-color: var(--wordy-secondary-bg);
+  @apply bg-wordy-background border-wordy-surface;
 }
 
 .fc-col-header-cell {
-  background-color: var(--wordy-secondary-bg);
-  border-color: var(--wordy-secondary-bg);
+  @apply bg-wordy-surface border-wordy-surface;
 }
 
 .fc-day-today {
-  background-color: rgba(79, 209, 197, 0.2) !important;
+  @apply bg-opacity-20 bg-wordy-accent;
 }
 
 .fc-col-header-cell-cushion,
 .fc-daygrid-day-number {
-  color: var(--wordy-text);
+  @apply text-wordy-text;
 }
 
 /* Toast notifications */
 .Toastify__toast {
-  background-color: var(--wordy-secondary-bg);
-  color: var(--wordy-text);
+  @apply bg-wordy-surface text-wordy-text;
 }
 
 .Toastify__progress-bar {
-  background-color: var(--wordy-accent);
+  @apply bg-wordy-accent;
 }
 
-/* Loading Spinner */
-.loader {
-  border: 4px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 4px solid var(--wordy-primary);
-  width: 24px;
-  height: 24px;
-  animation: spin 2s linear infinite;
+/* Waveform styles */
+.wavesurfer-region {
+  @apply bg-wordy-accent bg-opacity-30;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  @apply w-2;
 }
 
-/* Add any other global styles here */
+::-webkit-scrollbar-track {
+  @apply bg-wordy-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-wordy-accent rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-wordy-primary;
+}

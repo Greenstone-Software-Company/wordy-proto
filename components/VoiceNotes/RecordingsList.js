@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { PlayIcon, PauseIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { toast } from 'react-toastify';
+import Button from '../Button';
+import Input from '../Input';
+import Card from '../Card';
 
 const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPlayPause, currentlyPlaying }) => {
   const [editingId, setEditingId] = useState(null);
@@ -8,7 +11,7 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
 
   const handleRenameClick = (id, currentName) => {
     setEditingId(id);
-    setEditName(currentName || ''); // Ensure we have a string to edit
+    setEditName(currentName || '');
   };
 
   const handleRenameSubmit = (id) => {
@@ -29,72 +32,75 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
   };
 
   return (
-    <div className="bg-wordy-secondary-bg rounded-lg p-4">
-      <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recordings</h2>
+    <Card>
+      <h2 className="text-2xl font-semibold mb-4 text-wordy-text">Recordings</h2>
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Search recordings..."
-          className="w-full p-2 rounded bg-wordy-bg text-wordy-text border border-wordy-accent focus:outline-none focus:ring-2 focus:ring-wordy-primary"
+          className="w-full"
         />
       </div>
       {recordings.length === 0 ? (
         <p className="text-wordy-text text-center italic">No recordings found</p>
       ) : (
-        <ul className="space-y-2">
-          {recordings.map((recording, index) => (
+        <ul className="space-y-3">
+          {recordings.map((recording) => (
             <li
-              key={recording.id ? recording.id : `${recording.name}-${index}`} // Ensure the key is unique and consistent
-              className="bg-wordy-bg p-3 rounded shadow cursor-pointer hover:bg-opacity-80 transition-colors"
+              key={recording.id}
+              className="bg-wordy-background p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
-                <div onClick={() => onRecordingSelect(recording)}>
+                <div className="flex-grow" onClick={() => onRecordingSelect(recording)}>
                   {editingId === recording.id ? (
-                    <input
+                    <Input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onBlur={() => handleRenameSubmit(recording.id)}
                       onKeyPress={(e) => e.key === 'Enter' && handleRenameSubmit(recording.id)}
-                      className="bg-wordy-bg text-wordy-text border-b border-wordy-accent focus:outline-none"
+                      className="w-full px-2 py-1"
                       autoFocus
                     />
                   ) : (
-                    <p className="font-semibold text-wordy-text">{recording.name}</p>
+                    <h3 className="font-semibold text-wordy-text text-lg mb-1">{recording.name}</h3>
                   )}
                   <p className="text-sm text-wordy-text opacity-70">
                     {recording.duration} • {new Date(recording.timestamp).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
-                    className="p-1 rounded-full bg-wordy-primary text-wordy-text hover:bg-opacity-80"
+                  <Button 
                     onClick={() => onPlayPause(recording.id)}
+                    variant="primary"
+                    className="p-2 rounded-full"
                     title={currentlyPlaying === recording.id ? "Pause" : "Play"}
                   >
                     {currentlyPlaying === recording.id ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
-                  </button>
-                  <button 
-                    className="p-1 rounded-full bg-wordy-accent text-wordy-text hover:bg-opacity-80"
+                  </Button>
+                  <Button 
                     onClick={() => handleRenameClick(recording.id, recording.name)}
+                    variant="secondary"
+                    className="p-2 rounded-full"
                     title="Rename"
                   >
                     <PencilIcon className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="p-1 rounded-full bg-wordy-accent text-wordy-text hover:bg-opacity-80"
+                  </Button>
+                  <Button 
                     onClick={() => handleDelete(recording.id)}
+                    variant="accent"
+                    className="p-2 rounded-full"
                     title="Delete"
                   >
                     <TrashIcon className="h-5 w-5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   );
 };
 

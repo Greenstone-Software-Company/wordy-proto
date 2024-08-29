@@ -4,24 +4,27 @@ import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
 import Transcription from '../components/Transcription';
-import AIChat from '../components/VoiceNotes/AIChat';
+import AIChat from '../components/AIChat';
 import FileUpload from '../components/VoiceNotes/FileUpload';
 import { db, auth, storage } from '../firebase';
-import { collection, addDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import dynamic from 'next/dynamic';
+import { toast } from 'react-toastify';
+import WaveSurfer from 'wavesurfer.js';
+import Button from '../../Button';  // Corrected path
+import Card from '../../Card';      // Corrected path
 
-const WaveSurfer = dynamic(() => import('wavesurfer.js').then(module => module.default), { ssr: false });
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
   const [selectedRecording, setSelectedRecording] = useState(null);
   const [transcription, setTranscription] = useState('');
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
 
   const waveformRef = useRef(null);
   const wavesurfer = useRef(null);
@@ -32,36 +35,38 @@ export default function VoiceNotesPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && waveformRef.current && selectedRecording) {
-      const initWaveSurfer = async () => {
-        if (wavesurfer.current) {
-          wavesurfer.current.destroy();
-        }
-        
-        wavesurfer.current = WaveSurfer.create({
-          container: waveformRef.current,
-          waveColor: 'violet',
-          progressColor: 'purple',
-          cursorColor: 'navy',
-          barWidth: 2,
-          barRadius: 3,
-          cursorWidth: 1,
-          height: 100,
-          barGap: 3,
-        });
-
-        if (selectedRecording.url) {
-          try {
-            await wavesurfer.current.load(selectedRecording.url);
-          } catch (error) {
-            console.error('Error loading audio:', error);
-            setError('Failed to load audio. Please try again.');
-          }
-        }
-      };
-
       initWaveSurfer();
     }
   }, [selectedRecording]);
+
+  const initWaveSurfer = async () => {
+    if (wavesurfer.current) {
+      wavesurfer.current.destroy();
+    }
+    
+    wavesurfer.current = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: '#4AB586',
+      progressColor: '#2C7D59',
+      cursorColor: '#2C7D59',
+      barWidth: 2,
+      barRadius: 3,
+      cursorWidth: 1,
+      height: 80,
+      barGap: 2,
+      responsive: true,
+      normalize: true,
+    });
+
+    if (selectedRecording.url) {
+      try {
+        await wavesurfer.current.load(selectedRecording.url);
+      } catch (error) {
+        console.error('Error loading audio:', error);
+        setError('Failed to load audio. Please try again.');
+      }
+    }
+  };
 
   const fetchRecordings = async () => {
     const user = auth.currentUser;
@@ -111,9 +116,11 @@ export default function VoiceNotesPage() {
       const recordingWithId = { id: docRef.id, ...recordingData };
       setRecordings(prevRecordings => [recordingWithId, ...prevRecordings]);
       setSelectedRecording(recordingWithId);
+      toast.success('New recording added successfully!');
     } catch (error) {
       console.error('Error saving new recording:', error);
       setError('Failed to save new recording');
+      toast.error('Failed to save new recording');
     }
   };
 
@@ -132,6 +139,7 @@ export default function VoiceNotesPage() {
       setSelectedRecording(null);
       setTranscription('');
     }
+    toast.info('Recording deleted');
   };
 
   const handleTranscribe = async () => {
@@ -150,19 +158,64 @@ export default function VoiceNotesPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.details || 'Transcription failed');
+        throw new Error('Error transcribing audio');
       }
 
       const data = await response.json();
       setTranscription(data.transcription);
+      
+      const recordingRef = doc(db, 'recordings', selectedRecording.id);
+      await updateDoc(recordingRef, { transcription: data.transcription });
+      
       setSelectedRecording({ ...selectedRecording, transcription: data.transcription });
+      toast.success('Transcription completed successfully!');
     } catch (error) {
       console.error('Transcription error:', error);
       setError(`Failed to transcribe audio: ${error.message}`);
+      toast.error('Failed to transcribe audio');
     } finally {
       setIsTranscribing(false);
     }
+  };
+
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+
+    setIsLoading(true);
+    setMessages(prevMessages => [...prevMessages, { text: chatMessage, isUser: true }]);
+    
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: chatMessage, transcription }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+      setMessages(prevMessages => [...prevMessages, { text: data.response, isUser: false }]);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      setError('Failed to get AI response. Please try again.');
+      toast.error('Failed to get AI response');
+    } finally {
+      setIsLoading(false);
+      setChatMessage('');
+    }
+  };
+
+  const handleDeleteAll = () => {
+    setRecordings([]);
+    setSelectedRecording(null);
+    setTranscription('');
+    setMessages([]);
+    toast.info('All recordings deleted');
   };
 
   const handlePlayPause = (id) => {
@@ -184,39 +237,6 @@ export default function VoiceNotesPage() {
     }
   };
 
-  const handleDeleteAll = () => {
-    setRecordings([]);
-    setSelectedRecording(null);
-    setTranscription('');
-    setMessages([]);
-  };
-
-  const handleChatSubmit = async (e) => {
-    e.preventDefault();
-    if (!chatMessage.trim()) return;
-
-    // Add user message to chat
-    setMessages([...messages, { text: chatMessage, isUser: true }]);
-    setChatMessage(''); // Clear the input
-
-    try {
-      // Simulate AI response
-      const aiResponse = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: chatMessage }),
-      });
-
-      const responseData = await aiResponse.json();
-      setMessages((prevMessages) => [...prevMessages, { text: responseData.response, isUser: false }]);
-    } catch (error) {
-      console.error('AI chat error:', error);
-      setError('Failed to get AI response.');
-    }
-  };
-
   return (
     <Layout>
       <Head>
@@ -224,58 +244,71 @@ export default function VoiceNotesPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="bg-wordy-bg rounded-lg p-4 md:p-6">
-        <h1 className="text-3xl font-bold mb-6 text-wordy-text">Voice Notes AI</h1>
-        <div className="flex flex-col md:flex-row justify-between mb-6">
-          <button 
-            onClick={handleDeleteAll} 
-            className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors mb-4 md:mb-0"
-          >
-            Delete All
-          </button>
-          <div className="flex space-x-4">
-            <AudioRecorder onNewRecording={handleNewRecording} />
-            <FileUpload onFileUpload={handleFileUpload} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <RecordingsList
-            recordings={recordings}
-            onRecordingSelect={handleRecordingSelect}
-            onRecordingDelete={handleRecordingDelete}
-            onPlayPause={handlePlayPause}
-            currentlyPlaying={currentlyPlaying}
-          />
-          {selectedRecording && (
-            <div className="bg-wordy-secondary-bg rounded-lg p-4 md:p-6">
-              <h2 className="text-xl font-semibold mb-4 text-wordy-text">Recording {selectedRecording.name}</h2>
-              <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4 h-24"></div>
-              <div className="flex justify-between mb-4">
-                <button
-                  onClick={() => handlePlayPause(selectedRecording.id)}
-                  className="bg-wordy-accent text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
+      <div className="bg-wordy-bg min-h-screen p-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8 text-wordy-text">Voice Notes AI</h1>
+          <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+            <div className="w-full lg:w-1/3">
+              <Card className="mb-6"> {/* Changed this part */}
+                <div className="flex justify-between items-center mb-4">
+                  <AudioRecorder onNewRecording={handleNewRecording} />
+                  <FileUpload onFileUpload={handleFileUpload} />
+                </div>
+                <Button 
+                  onClick={handleDeleteAll} 
+                  variant="accent"
+                  className="w-full"
                 >
-                  {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
-                </button>
-                <button
-                  onClick={handleTranscribe}
-                  className="bg-wordy-primary text-white px-4 py-2 rounded hover:bg-opacity-80 transition-colors"
-                  disabled={isTranscribing}
-                >
-                  {isTranscribing ? 'Transcribing...' : 'Transcribe'}
-                </button>
-              </div>
-              <Transcription transcription={transcription} isLoading={isTranscribing} />
-              <AIChat
-                messages={messages}
-                chatMessage={chatMessage} // Pass chatMessage state
-                setChatMessage={setChatMessage} // Pass setChatMessage function
-                handleChatSubmit={handleChatSubmit} // Pass handleChatSubmit function
-                isLoading={isTranscribing}
-                transcription={transcription}
+                  Delete All
+                </Button>
+              </Card>
+              <RecordingsList
+                recordings={recordings}
+                onRecordingSelect={handleRecordingSelect}
+                onRecordingDelete={handleRecordingDelete}
+                onPlayPause={handlePlayPause}
+                currentlyPlaying={currentlyPlaying}
               />
             </div>
-          )}
+            <div className="w-full lg:w-2/3">
+              {selectedRecording ? (
+                <Card> {/* Changed this part */}
+                  <h2 className="text-2xl font-semibold mb-4 text-wordy-text">{selectedRecording.name}</h2>
+                  <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4"></div>
+                  <div className="flex justify-between mb-4">
+                    <Button
+                      onClick={() => handlePlayPause(selectedRecording.id)}
+                      variant="primary"
+                    >
+                      {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
+                    </Button>
+                    <Button
+                      onClick={handleTranscribe}
+                      variant="secondary"
+                      disabled={isTranscribing}
+                    >
+                      {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+                    </Button>
+                  </div>
+                  <Transcription transcription={transcription} isLoading={isTranscribing} />
+                </Card>
+              ) : (
+                <Card className="flex items-center justify-center h-64"> {/* Changed this part */}
+                  <p className="text-wordy-text text-lg">Select a recording to view details</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="fixed bottom-6 right-6 w-80">
+          <AIChat
+            messages={messages}
+            chatMessage={chatMessage}
+            setChatMessage={setChatMessage}
+            handleChatSubmit={handleChatSubmit}
+            isLoading={isLoading}
+            transcription={transcription}
+          />
         </div>
         {error && <p className="text-red-500 mt-4">{error}</p>}
       </div>
