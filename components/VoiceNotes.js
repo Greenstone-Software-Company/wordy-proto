@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import Layout from '../components/Layout';
 import AudioRecorder from '../components/AudioRecorder';
 import RecordingsList from '../components/VoiceNotes/RecordingsList';
@@ -10,10 +11,11 @@ import { db, auth, storage } from '../firebase';
 import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-toastify';
-import WaveSurfer from 'wavesurfer.js';
-import Button from '../../Button';  // Corrected path
-import Card from '../../Card';      // Corrected path
+import Button from '../components/Button';
+import Card from '../components/Card';
 
+// Dynamically import WaveSurfer with SSR option set to false
+const DynamicWaveSurfer = dynamic(() => import('wavesurfer.js'), { ssr: false });
 
 export default function VoiceNotesPage() {
   const [recordings, setRecordings] = useState([]);
@@ -43,8 +45,8 @@ export default function VoiceNotesPage() {
     if (wavesurfer.current) {
       wavesurfer.current.destroy();
     }
-    
-    wavesurfer.current = WaveSurfer.create({
+
+    wavesurfer.current = DynamicWaveSurfer.create({
       container: waveformRef.current,
       waveColor: '#4AB586',
       progressColor: '#2C7D59',
@@ -58,7 +60,7 @@ export default function VoiceNotesPage() {
       normalize: true,
     });
 
-    if (selectedRecording.url) {
+    if (selectedRecording?.url) {
       try {
         await wavesurfer.current.load(selectedRecording.url);
       } catch (error) {
@@ -163,10 +165,10 @@ export default function VoiceNotesPage() {
 
       const data = await response.json();
       setTranscription(data.transcription);
-      
+
       const recordingRef = doc(db, 'recordings', selectedRecording.id);
       await updateDoc(recordingRef, { transcription: data.transcription });
-      
+
       setSelectedRecording({ ...selectedRecording, transcription: data.transcription });
       toast.success('Transcription completed successfully!');
     } catch (error) {
@@ -178,13 +180,19 @@ export default function VoiceNotesPage() {
     }
   };
 
+  const handlePlayPause = () => {
+    if (wavesurfer.current) {
+      wavesurfer.current.playPause();
+    }
+  };
+
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
 
     setIsLoading(true);
     setMessages(prevMessages => [...prevMessages, { text: chatMessage, isUser: true }]);
-    
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -218,25 +226,6 @@ export default function VoiceNotesPage() {
     toast.info('All recordings deleted');
   };
 
-  const handlePlayPause = (id) => {
-    if (wavesurfer.current) {
-      if (currentlyPlaying === id) {
-        wavesurfer.current.playPause();
-        setCurrentlyPlaying(wavesurfer.current.isPlaying() ? id : null);
-      } else {
-        wavesurfer.current.stop();
-        const recordingToPlay = recordings.find(r => r.id === id);
-        if (recordingToPlay && recordingToPlay.url) {
-          wavesurfer.current.load(recordingToPlay.url);
-          setTimeout(() => {
-            wavesurfer.current.play();
-            setCurrentlyPlaying(id);
-          }, 100);
-        }
-      }
-    }
-  };
-
   return (
     <Layout>
       <Head>
@@ -249,7 +238,7 @@ export default function VoiceNotesPage() {
           <h1 className="text-4xl font-bold mb-8 text-wordy-text">Voice Notes AI</h1>
           <div className="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
             <div className="w-full lg:w-1/3">
-              <Card className="mb-6"> {/* Changed this part */}
+              <Card className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <AudioRecorder onNewRecording={handleNewRecording} />
                   <FileUpload onFileUpload={handleFileUpload} />
@@ -272,15 +261,15 @@ export default function VoiceNotesPage() {
             </div>
             <div className="w-full lg:w-2/3">
               {selectedRecording ? (
-                <Card> {/* Changed this part */}
+                <Card>
                   <h2 className="text-2xl font-semibold mb-4 text-wordy-text">{selectedRecording.name}</h2>
                   <div ref={waveformRef} className="bg-wordy-bg p-4 rounded mb-4"></div>
                   <div className="flex justify-between mb-4">
                     <Button
-                      onClick={() => handlePlayPause(selectedRecording.id)}
+                      onClick={handlePlayPause}
                       variant="primary"
                     >
-                      {currentlyPlaying === selectedRecording.id ? 'Pause' : 'Play'}
+                      Play/Pause
                     </Button>
                     <Button
                       onClick={handleTranscribe}
@@ -293,7 +282,7 @@ export default function VoiceNotesPage() {
                   <Transcription transcription={transcription} isLoading={isTranscribing} />
                 </Card>
               ) : (
-                <Card className="flex items-center justify-center h-64"> {/* Changed this part */}
+                <Card className="flex items-center justify-center h-64">
                   <p className="text-wordy-text text-lg">Select a recording to view details</p>
                 </Card>
               )}

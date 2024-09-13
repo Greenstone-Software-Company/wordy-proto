@@ -1,99 +1,65 @@
 let mediaRecorder;
-let audioStream;
-let isListening = false;
+let audioChunks = [];
+let currentStream = null; // To store the audio stream
 
-function startListening() {
-  if (isListening) return;
-  
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      audioStream = stream;
-      isListening = true;
-      try {
-        chrome.runtime.sendMessage({ action: 'updateListeningStatus', isListening: true });
-      } catch (e) {
-        console.error('Failed to send message: Extension context may be invalidated');
-      }
-    })
-    .catch(error => console.error('Error accessing microphone:', error));
-}
-
-function stopListening() {
-  if (!isListening) return;
-  
-  if (audioStream) {
-    audioStream.getTracks().forEach(track => track.stop());
-  }
-  audioStream = null;
-  isListening = false;
-  try {
-    chrome.runtime.sendMessage({ action: 'updateListeningStatus', isListening: false });
-  } catch (e) {
-    console.error('Failed to send message: Extension context may be invalidated');
-  }
-}
-
-function checkForMeeting() {
-  const isInMeeting = document.querySelector('audio') || document.querySelector('video');
-  if (isInMeeting && !isListening) {
-    startListening();
-  } else if (!isListening && isListening) {
-    stopListening();
-  }
-}
-
-function startRecording() {
-  if (!audioStream) return;
-  
-  mediaRecorder = new MediaRecorder(audioStream);
-  const audioChunks = [];
-  
-  mediaRecorder.ondataavailable = (event) => {
-    audioChunks.push(event.data);
-  };
-  
-  mediaRecorder.onstop = () => {
-    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-    try {
-      chrome.runtime.sendMessage({ action: 'uploadAudio', audioBlob: audioBlob });
-    } catch (e) {
-      console.error('Failed to send audio: Extension context may be invalidated');
-    }
-  };
-  
-  mediaRecorder.start();
-  try {
-    chrome.runtime.sendMessage({ action: 'updateRecordingStatus', isRecording: true });
-  } catch (e) {
-    console.error('Failed to send message: Extension context may be invalidated');
-  }
-}
-
-function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-    try {
-      chrome.runtime.sendMessage({ action: 'updateRecordingStatus', isRecording: false });
-    } catch (e) {
-      console.error('Failed to send message: Extension context may be invalidated');
-    }
-  }
-}
-
+// Listen for messages from the extension's background or popup script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  switch (request.action) {
-    case 'startRecording':
-      startRecording();
-      break;
-    case 'stopRecording':
-      stopRecording();
-      break;
-  }
+    switch (request.action) {
+        case "requestAudioStream":
+            handleAudioAccess(sendResponse);
+            return true; // Indicates that the response is asynchronous
+        case 'startRecording':
+            startRecording();
+            break;
+        case 'stopRecording':
+            stopRecording();
+            break;
+    }
 });
 
-// Use a more reliable method to check for meetings
-const observer = new MutationObserver(checkForMeeting);
-observer.observe(document.body, { childList: true, subtree: true });
+// Function to handle audio access and return the stream
+function handleAudioAccess(sendResponse) {
+    if (currentStream) {
+        // If the stream is already available, respond immediately
+        sendResponse({ stream: currentStream });
+    } else {
+        // Request audio stream access
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                currentStream = stream; // Store the stream for future use
+                sendResponse({ stream: stream });
+            })
+            .catch(error => {
+                console.error("Error accessing media devices:", error);
+                sendResponse({ error: error.message });
+            });
+    }
+}
 
-// Initial check
-checkForMeeting();
+// Function to start recording audio
+function startRecording() {
+    if (!currentStream) {
+        console.error("No audio stream available for recording.");
+        return;
+    }
+    
+    mediaRecorder = new MediaRecorder(currentStream);
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+    mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        chrome.runtime.sendMessage({ action: 'uploadAudio', audioBlob });
+        audioChunks = [];
+    };
+    mediaRecorder.start();
+}
+
+// Function to stop recording audio
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        currentStream = null; // Clear the stream after stopping
+    }
+}

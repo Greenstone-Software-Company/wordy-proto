@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MicrophoneIcon, PauseIcon, StopIcon } from '@heroicons/react/24/solid';
+import WaveSurfer from 'wavesurfer.js';
 
 const AudioRecorder = ({ onNewRecording }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -8,12 +9,35 @@ const AudioRecorder = ({ onNewRecording }) => {
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
+  const waveformRef = useRef(null);
+  const wavesurfer = useRef(null);
 
   useEffect(() => {
-    // Cleanup interval on component unmount
+    // Cleanup interval and wavesurfer on component unmount
     return () => {
       clearInterval(timerInterval.current);
+      if (wavesurfer.current) {
+        wavesurfer.current.destroy();
+      }
     };
+  }, []);
+
+  useEffect(() => {
+    if (waveformRef.current && !wavesurfer.current) {
+      wavesurfer.current = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: '#4AB586',
+        progressColor: '#2C7D59',
+        cursorColor: '#2C7D59',
+        barWidth: 2,
+        barRadius: 3,
+        cursorWidth: 1,
+        height: 40,
+        barGap: 2,
+        responsive: true,
+        normalize: true,
+      });
+    }
   }, []);
 
   const startRecording = async () => {
@@ -23,6 +47,9 @@ const AudioRecorder = ({ onNewRecording }) => {
 
       mediaRecorder.current.ondataavailable = (event) => {
         audioChunks.current.push(event.data);
+        if (wavesurfer.current) {
+          wavesurfer.current.loadBlob(new Blob(audioChunks.current, { type: 'audio/wav' }));
+        }
       };
 
       mediaRecorder.current.onstop = () => {
@@ -43,7 +70,7 @@ const AudioRecorder = ({ onNewRecording }) => {
         audioChunks.current = [];
       };
 
-      mediaRecorder.current.start();
+      mediaRecorder.current.start(250); // Collect data every 250ms
       setIsRecording(true);
       setIsPaused(false);
       startTimer();
@@ -137,6 +164,9 @@ const AudioRecorder = ({ onNewRecording }) => {
           <span className="font-semibold">{formatTime(recordingTime)}</span>
         )}
       </div>
+      {isRecording && (
+        <div ref={waveformRef} className="mt-4 bg-wordy-bg p-2 rounded"></div>
+      )}
     </div>
   );
 };

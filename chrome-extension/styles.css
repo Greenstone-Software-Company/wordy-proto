@@ -1,9 +1,19 @@
+/* Global Styles */
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #2196F3;
+    --background-color: #1e3c72;
+    --text-color: #ffffff;
+    --error-color: #ff6b6b;
+}
+
+/* General Styling */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
     width: 300px;
     padding: 10px;
-    background-color: #1F2937;
-    color: #F3F4F6;
 }
 
 .container {
@@ -23,23 +33,24 @@ h1 {
     font-style: italic;
 }
 
-.controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
+/* Button Styling */
 .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    border: none;
 }
 
 .btn-primary {
-    background-color: #6366F1;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
     color: white;
 }
 
@@ -56,6 +67,18 @@ h1 {
     background-color: #DC2626;
 }
 
+.error-message {
+    color: var(--error-color);
+}
+
+/* Controls Section */
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Recording Information */
 .recording-info {
     margin-bottom: 10px;
 }
@@ -69,6 +92,7 @@ h1 {
     margin-bottom: 5px;
 }
 
+/* Recordings List */
 #recordingsList {
     list-style-type: none;
     padding: 0;

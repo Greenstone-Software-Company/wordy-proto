@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 
 const AIChat = ({ messages, chatMessage, setChatMessage, handleChatSubmit, isLoading, transcription }) => {
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-2 text-wordy-text">AI Chat</h3>
-      <div className="bg-wordy-bg p-4 rounded-lg mb-4 h-64 overflow-y-auto">
+    <div className="bg-wordy-secondary-bg rounded-lg p-4 shadow-lg">
+      <h3 className="text-xl font-semibold mb-4 text-wordy-text">Wordy AI</h3>
+      <div
+        ref={chatContainerRef}
+        className="bg-wordy-bg p-4 rounded-lg mb-4 h-64 overflow-y-auto custom-scrollbar"
+      >
         {messages.map((message, index) => (
           <div
             key={index}
@@ -24,6 +35,13 @@ const AIChat = ({ messages, chatMessage, setChatMessage, handleChatSubmit, isLoa
             </span>
           </div>
         ))}
+        {isLoading && (
+          <div className="text-center">
+            <div className="inline-block animate-bounce bg-wordy-accent rounded-full w-2 h-2 mr-1"></div>
+            <div className="inline-block animate-bounce bg-wordy-accent rounded-full w-2 h-2 mr-1" style={{animationDelay: '0.2s'}}></div>
+            <div className="inline-block animate-bounce bg-wordy-accent rounded-full w-2 h-2" style={{animationDelay: '0.4s'}}></div>
+          </div>
+        )}
       </div>
       <form onSubmit={handleChatSubmit} className="flex items-center">
         <input
@@ -36,7 +54,7 @@ const AIChat = ({ messages, chatMessage, setChatMessage, handleChatSubmit, isLoa
         />
         <button
           type="submit"
-          className="bg-wordy-primary text-white p-2 rounded-r hover:bg-opacity-80 transition-colors disabled:opacity-50"
+          className="bg-wordy-primary text-white p-2 rounded-r hover:bg-opacity-80 transition-colors disabled:opacity-50 flex items-center justify-center"
           disabled={isLoading || !transcription || !chatMessage.trim()}
         >
           <PaperAirplaneIcon className="h-5 w-5" />
@@ -44,7 +62,7 @@ const AIChat = ({ messages, chatMessage, setChatMessage, handleChatSubmit, isLoa
       </form>
       {!transcription && (
         <p className="text-wordy-text opacity-50 mt-2 text-sm">
-          Transcribe audio to start chatting with AI
+          Transcribe audio to start chatting with Wordy AI
         </p>
       )}
     </div>

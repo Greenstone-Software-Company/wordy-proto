@@ -1,0 +1,130 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    width: 300px;
+    margin: 0;
+    padding: 0;
+    background-color: #141414;
+    color: #ffffff;
+}
+
+.container {
+    padding: 20px;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #4AB586;
+}
+
+.hidden {
+    display: none;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background-color: #222;
+    color: #fff;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #4AB586;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3d9670;
+}
+
+.btn-secondary {
+    background-color: #555;
+    color: white;
+    margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    background-color: #666;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.signup-link {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.signup-link a {
+    color: #4AB586;
+    text-decoration: none;
+}
+
+.status {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.error-message {
+    color: #ff6b6b;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.loading-indicator {
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.recent-recordings {
+    margin-top: 20px;
+}
+
+.recent-recordings h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#recordingsList {
+    list-style-type: none;
+    padding: 0;
+}
+
+#recordingsList li {
+    background-color: #222;
+    margin-bottom: 5px;
+    padding: 8px;
+    border-radius: 4px;
+}

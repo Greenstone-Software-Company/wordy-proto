@@ -118,3 +118,23 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-wordy-primary;
 }
+
+
+/* Add this to the existing globals.css file */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--wordy-bg);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--wordy-accent);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--wordy-primary);
+}

@@ -1,13 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlayIcon, PauseIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { toast } from 'react-toastify';
 import Button from '../Button';
 import Input from '../Input';
 import Card from '../Card';
+import WaveSurfer from 'wavesurfer.js';
 
 const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPlayPause, currentlyPlaying }) => {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
+  const waveformRefs = useRef({});
+
+  useEffect(() => {
+    recordings.forEach((recording) => {
+      if (!waveformRefs.current[recording.id]) {
+        const waveformElement = document.getElementById(`waveform-${recording.id}`);
+        if (waveformElement) {
+          waveformRefs.current[recording.id] = WaveSurfer.create({
+            container: waveformElement,
+            waveColor: '#4AB586',
+            progressColor: '#2C7D59',
+            cursorColor: '#2C7D59',
+            barWidth: 2,
+            barRadius: 3,
+            cursorWidth: 1,
+            height: 30,
+            barGap: 1,
+            responsive: true,
+            normalize: true,
+          });
+          waveformRefs.current[recording.id].load(recording.url);
+        }
+      }
+    });
+
+    return () => {
+      Object.values(waveformRefs.current).forEach((wavesurfer) => {
+        wavesurfer.destroy();
+      });
+    };
+  }, [recordings]);
 
   const handleRenameClick = (id, currentName) => {
     setEditingId(id);
@@ -31,6 +63,11 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
     }
   };
 
+  const formatDuration = (duration) => {
+    const [minutes, seconds] = duration.split(':');
+    return `${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
+  };
+
   return (
     <Card>
       <h2 className="text-2xl font-semibold mb-4 text-wordy-text">Recordings</h2>
@@ -50,7 +87,7 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
               key={recording.id}
               className="bg-wordy-background p-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex-grow" onClick={() => onRecordingSelect(recording)}>
                   {editingId === recording.id ? (
                     <Input
@@ -66,7 +103,7 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
                     <h3 className="font-semibold text-wordy-text text-lg mb-1">{recording.name}</h3>
                   )}
                   <p className="text-sm text-wordy-text opacity-70">
-                    {recording.duration} • {new Date(recording.timestamp).toLocaleString()}
+                    {formatDuration(recording.duration)} • {new Date(recording.timestamp).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex space-x-2">
@@ -96,6 +133,7 @@ const RecordingsList = ({ recordings, onRecordingSelect, onRecordingDelete, onPl
                   </Button>
                 </div>
               </div>
+              <div id={`waveform-${recording.id}`} className="mt-2"></div>
             </li>
           ))}
         </ul>
